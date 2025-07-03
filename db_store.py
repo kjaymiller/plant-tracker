@@ -37,7 +37,7 @@ sensors = {
 
 
 def reading():
-    time.sleep(1)
+    time.sleep(2)
     try:
         data = {
             "sensors": {k: v._reading for k, v in sensors.items() if v.active},
