@@ -3,6 +3,7 @@ Get readings from grow hat
 """
 
 import socket
+import time
 import os
 import datetime
 import json
@@ -36,15 +37,13 @@ sensors = {
 
 
 def reading():
+    time.sleep(1)
     try:
         data = {
             "sensors": {k: v._reading for k, v in sensors.items() if v.active},
             "device": socket.gethostname(),
         }
-
         dumped_data = json.dumps(data)
-        print(dumped_data)
-        return
 
         with connection.cursor() as cursor:
             cursor.execute(
