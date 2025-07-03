@@ -26,7 +26,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-connection = psycopg.connect(os.getenv("AIVEN_PG_CONNECTION_STRING"))
+connection = psycopg.connect(os.getenv("PG_CONNECTION_STRING"))
 
 sensors = {
     "m1": Moisture(1),
