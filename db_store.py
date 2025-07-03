@@ -36,7 +36,6 @@ logger = logging.getLogger(__name__)
 connection = psycopg.connect(os.getenv("AIVEN_PG_CONNECTION_STRING"))
 
 def reading():
-    
     meter = [Moisture(_+1) for _ in range(3)]
     spinner = Spinner(name="line", text="Loading Sensors") 
     process_timer = datetime.datetime.now()
@@ -50,7 +49,6 @@ def reading():
                 msg = "Unable to process all nodes please check device"
                 logger.warning(msg)
                 break
-    
     try:
         data = {
             "sensors": {
@@ -62,6 +60,8 @@ def reading():
         }
 
         dumped_data = json.dumps(data)
+        print(dumped_data)
+        return
 
         with connection.cursor() as cursor:
             cursor.execute("""
