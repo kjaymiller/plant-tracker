@@ -32,19 +32,22 @@ The system uses a PostgreSQL database with the following tables:
 > [!WARNING]
 > You need the headers installed on your Pi Zero for the grow hat.
 
-1. Set up your Raspberry Pi with the Grow HAT
-2. Install required Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up your PostgreSQL database using the provided schema:
+Step 1: Set up your Raspberry Pi with the [Grow HAT python modules](https://github.com/pimoroni/grow-python/tree/main?tab=readme-ov-file#one-line-installs-from-github)
+Install required Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Set up your PostgreSQL database using the provided schema:
    ```bash
    psql -f setup.sql
    ```
-4. Configure your database connection in a `.env` file:
-   ```
-   AIVEN_PG_CONNECTION_STRING=your_postgresql_connection_string
-   ```
+
+Configure your database connection in a `.env` file:
+```
+echo "PG_CONNECTION_STRING=<YOUR_POSTGRESQL_CONNECTION_STRING> > .env"
+```
 
 ## Usage
 
@@ -71,14 +74,6 @@ Moisture readings are stored as JSON in the database:
   },
   "device": "raspberrypi-001"
 }
-```
-
-### Sample Query Results
-
-Example data from the moisture_log table:
-```
-7332    2025-06-30 08:08:04.489534      {"device": "kjaymiller-grow0", "sensors": {"m1": 11.425500255039324, "m2": 12.306599494834478, "m3": 15.98892082046204}}
-Time: 0.033s
 ```
 
 ## Logging
