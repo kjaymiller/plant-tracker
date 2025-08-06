@@ -1,0 +1,24 @@
+{% extends 'plants/base.html' %}
+
+{% block title %}Home - Plant Tracker{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8">Welcome to Plant Tracker</h1>
+    
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto mb-8">
+        <div class="text-3xl font-bold text-green-600 mb-2">{{ plant_count }}</div>
+        <div class="text-gray-600">Plant{{ plant_count|pluralize }} tracked</div>
+    </div>
+    
+    <div class="space-y-4">
+        <a href="{% url 'plant-list' %}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
+            View All Plants
+        </a>
+        <br>
+        <a href="{% url 'plant-create' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
+            Add New Plant
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -193,3 +193,6 @@ cython_debug/
 .cursorignore
 .cursorindexingignoregrow_hat.log
 .envrc
+*pg_service.conf
+*pgpass
+.python-version

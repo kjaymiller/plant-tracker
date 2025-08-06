@@ -1,0 +1,71 @@
+{% extends 'plants/base.html' %}
+
+{% block title %}Plant List - Plant Tracker{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Plants</h2>
+    <a href="{% url 'plant-create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+        Add New Plant
+    </a>
+</div>
+
+{% if plants %}
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for plant in plants %}
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ plant.name|default:"Unnamed Plant" }}</h3>
+            {% if plant.scientific_name %}
+                <p class="text-gray-600 italic mb-4">{{ plant.scientific_name.scientific_name }}</p>
+            {% else %}
+                <p class="text-gray-500 mb-4">No scientific name</p>
+            {% endif %}
+            <div class="flex space-x-2">
+                <a href="{% url 'plant-detail' plant.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition duration-200">
+                    View
+                </a>
+                <a href="{% url 'plant-update' plant.pk %}" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-sm transition duration-200">
+                    Edit
+                </a>
+                <a href="{% url 'plant-delete' plant.pk %}" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition duration-200">
+                    Delete
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Previous</a>
+            {% endif %}
+            
+            <span class="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-green-600 rounded-md">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Last</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+{% else %}
+    <div class="text-center py-12">
+        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No plants yet</h3>
+        <p class="text-gray-600 mb-4">Get started by adding your first plant to the tracker.</p>
+        <a href="{% url 'plant-create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+            Add Your First Plant
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

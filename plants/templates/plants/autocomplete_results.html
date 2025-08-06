@@ -1,0 +1,27 @@
+{% if results %}
+<div class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+    {% for result in results %}
+        {% if result.type == 'existing' %}
+            <div class="px-4 py-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                 onclick="selectPlantType({{ result.id }}, '{{ result.name|escapejs }}')">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span class="text-gray-900">{{ result.name }}</span>
+                </div>
+            </div>
+        {% elif result.type == 'create' %}
+            <div class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 bg-blue-50"
+                 onclick="createNewPlantType('{{ result.value|escapejs }}')">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    <span class="text-blue-800 font-medium">{{ result.name }}</span>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}

@@ -1,0 +1,83 @@
+{% extends 'plants/base.html' %}
+
+{% block title %}{{ plant.name|default:"Plant" }} - Plant Tracker{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-8">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ plant.name|default:"Unnamed Plant" }}</h1>
+            {% if plant.scientific_name %}
+                <p class="text-xl text-gray-600 italic">{{ plant.scientific_name.scientific_name }}</p>
+            {% else %}
+                <p class="text-xl text-gray-500">No scientific name assigned</p>
+            {% endif %}
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'plant-update' plant.pk %}" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+                Edit Plant
+            </a>
+            <a href="{% url 'plant-delete' plant.pk %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+                Delete Plant
+            </a>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Plant Information</h2>
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Plant ID</label>
+                    <p class="text-gray-900">{{ plant.id }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <p class="text-gray-900">{{ plant.name|default:"Not specified" }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scientific Name</label>
+                    {% if plant.scientific_name %}
+                        <p class="text-gray-900 italic">{{ plant.scientific_name.scientific_name }}</p>
+                    {% else %}
+                        <p class="text-gray-500">Not specified</p>
+                    {% endif %}
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    {% if plant.notes %}
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ plant.notes }}</p>
+                    {% else %}
+                        <p class="text-gray-500">No notes added</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Actions</h2>
+            <div class="space-y-3">
+                <a href="{% url 'plant-list' %}" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
+                    Back to Plant List
+                </a>
+                <a href="{% url 'plant-update' plant.pk %}" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
+                    Edit This Plant
+                </a>
+                <a href="{% url 'plant-delete' plant.pk %}" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
+                    Delete This Plant
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Future: Display related moisture logs, device registrations, etc. -->
+    <div class="mt-8 pt-8 border-t border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Related Information</h2>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-blue-800">
+                <strong>Coming Soon:</strong> Moisture logs, device registrations, and care history will be displayed here.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

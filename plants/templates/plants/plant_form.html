@@ -1,0 +1,271 @@
+{% extends 'plants/base.html' %}
+
+{% block title %}{{ title|default:"Plant Form" }} - Plant Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title|default:"Plant Form" }}</h1>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Plant Name
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="mt-1">
+                        {% for error in form.name.errors %}
+                            <p class="text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500">Give your plant a friendly name (optional)</p>
+            </div>
+
+            <div>
+                <label for="plant_name_search" class="block text-sm font-medium text-gray-700 mb-2">
+                    Scientific Name
+                </label>
+                <div class="relative">
+                    <input type="text" 
+                           id="plant_name_search" 
+                           name="plant_name_search"
+                           placeholder="Start typing to search for plant names..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                           hx-get="{% url 'plant-name-autocomplete' %}"
+                           hx-trigger="input changed delay:300ms, focus"
+                           hx-target="#autocomplete-results"
+                           hx-indicator="#search-indicator"
+                           hx-include="this"
+                           hx-params="plant_name_search">
+                    <div id="search-indicator" class="htmx-indicator absolute right-3 top-2">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+                    </div>
+                </div>
+                
+                <div id="autocomplete-results" class="relative">
+                    <!-- Results will be populated here -->
+                </div>
+                
+                <!-- Hidden field for the actual form submission -->
+                {{ form.scientific_name }}
+                {% if form.scientific_name.errors %}
+                    <div class="mt-1">
+                        {% for error in form.scientific_name.errors %}
+                            <p class="text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500">Start typing to search for existing plant types or create a new one</p>
+            </div>
+
+            <div>
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="mt-1">
+                        {% for error in form.notes.errors %}
+                            <p class="text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500">Add any notes about your plant (optional)</p>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    {% for error in form.non_field_errors %}
+                        <p class="text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <a href="{% url 'plant-list' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-md transition duration-200">
+                    {% if title == "Edit Plant" %}Update Plant{% else %}Create Plant{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom confirmation modal -->
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Plant Type</h3>
+        <p id="confirmMessage" class="text-gray-700 mb-6"></p>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                Cancel
+            </button>
+            <button id="confirmBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200">
+                Create
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style the form fields to match Tailwind */
+    #id_scientific_name {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500;
+    }
+    
+    #id_scientific_name {
+        @apply bg-white;
+        display: none; /* Hide the original select field */
+    }
+    
+    .htmx-indicator {
+        opacity: 0;
+    }
+    
+    .htmx-request .htmx-indicator {
+        opacity: 1;
+    }
+</style>
+
+<script>
+function selectPlantType(id, name) {
+    console.log('Selecting plant type:', id, name);
+    
+    // Set the hidden select field value
+    const selectField = document.getElementById('id_scientific_name');
+    if (selectField) {
+        selectField.value = id;
+        console.log('Set scientific_name field to:', selectField.value);
+    } else {
+        console.error('Scientific name field not found!');
+    }
+    
+    // Update the search input to show selected name
+    document.getElementById('plant_name_search').value = name;
+    
+    // Clear the autocomplete results
+    document.getElementById('autocomplete-results').innerHTML = '';
+}
+
+function createNewPlantType(name) {
+    showConfirmModal(`Create new plant type: "${name}"?`, function() {
+        // Make HTMX request to create new plant type
+        fetch('{% url "create-plant-type" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: `scientific_name=${encodeURIComponent(name)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Create plant type response:', data);
+            if (data.success) {
+                selectPlantType(data.plant_type.id, data.plant_type.scientific_name);
+            } else {
+                alert('Error creating plant type: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating plant type');
+        });
+    });
+}
+
+// Hide autocomplete results when clicking outside
+document.addEventListener('click', function(event) {
+    const searchInput = document.getElementById('plant_name_search');
+    const resultsDiv = document.getElementById('autocomplete-results');
+    
+    if (!searchInput.contains(event.target) && !resultsDiv.contains(event.target)) {
+        resultsDiv.innerHTML = '';
+    }
+});
+
+// Handle form submission - if no plant type selected but search has value, try to find/create
+document.querySelector('form').addEventListener('submit', function(e) {
+    const searchValue = document.getElementById('plant_name_search').value.trim();
+    const selectedValue = document.getElementById('id_scientific_name').value;
+    
+    if (searchValue && !selectedValue) {
+        e.preventDefault();
+        showConfirmModal(`Create new plant type: "${searchValue}"?`, function() {
+            // Create new plant type and then submit form
+            fetch('{% url "create-plant-type" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: `scientific_name=${encodeURIComponent(searchValue)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Form submission create plant type response:', data);
+                if (data.success) {
+                    selectPlantType(data.plant_type.id, data.plant_type.scientific_name);
+                    // Submit the form after a short delay to ensure the field is updated
+                    setTimeout(() => {
+                        console.log('Submitting form after plant type creation');
+                        document.querySelector('form').submit();
+                    }, 100);
+                } else {
+                    alert('Error creating plant type: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating plant type');
+            });
+        });
+    }
+});
+
+// Utility functions
+function getCsrfToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+}
+
+function showConfirmModal(message, onConfirm) {
+    const modal = document.getElementById('confirmModal');
+    const messageElement = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    messageElement.textContent = message;
+    modal.classList.remove('hidden');
+    
+    // Remove any existing event listeners
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    // Add new event listeners
+    newConfirmBtn.addEventListener('click', function() {
+        modal.classList.add('hidden');
+        onConfirm();
+    });
+    
+    newCancelBtn.addEventListener('click', function() {
+        modal.classList.add('hidden');
+    });
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+</script>
+{% endblock %}
