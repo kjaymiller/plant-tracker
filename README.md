@@ -1,85 +1,85 @@
 # Plant Tracker
 
-A Raspberry Pi-based plant monitoring system that tracks soil moisture levels using the Pimoroni Grow HAT and stores data in a PostgreSQL database.
-
-## Hardware Requirements
-
-- Raspberry Pi (Works with Pi4 and Pi Zero WH. Imaged using the Raspberry Pi Imager)
-- [Pimoroni Grow HAT](https://shop.pimoroni.com/products/grow) - Available at Pimoroni
-- Up to 3 moisture sensors (connected to the Grow HAT)
+A Django web application for tracking plants, their moisture levels, and associated IoT devices.
 
 ## Features
 
-- Real-time moisture monitoring from up to 3 sensors
-- Data logging to PostgreSQL database with timestamps
-- Device hostname tracking for multi-device deployments
-- Plant and device registration system
-- Rich console output with loading spinners
-- Comprehensive logging to file and console
+- **Plant Management**: Track individual plants with names, scientific names, and notes
+- **Device Integration**: Register and manage IoT devices for monitoring plants
+- **Moisture Monitoring**: Log and track moisture data from connected devices
+- **Plant Types**: Manage plant species with scientific classifications
+- **Device Registration**: Associate devices with specific plants for monitoring
 
-## Database Schema
+## Models
 
-The system uses a PostgreSQL database with the following tables:
+- **Plants**: Store plant information including names, scientific names, and notes
+- **Devices**: Manage IoT devices with hostname and location tracking
+- **MoistureLogs**: Record moisture sensor data with timestamps
+- **PlantTypes**: Catalog plant species with scientific names
+- **PlantDeviceRegistration**: Link plants to monitoring devices
 
-- **devices**: Store device information (hostname, location)
-- **moisture_logs**: Time-series moisture data with JSON storage
-- **plant_types**: Scientific plant classification
-- **plants**: Individual plant records
-- **plant_device_registration**: Links plants to monitoring devices
+## Requirements
 
-## Installation
+- Python ≥ 3.13
+- PostgreSQL database
+- Django ≥ 5.2.4
 
-> [!WARNING]
-> You need the headers installed on your Pi Zero for the grow hat.
+## Setup
 
-Step 1: Set up your Raspberry Pi with the [Grow HAT python modules](https://github.com/pimoroni/grow-python/tree/main?tab=readme-ov-file#one-line-installs-from-github)
-Install required Python dependencies:
+### Using UV (Recommended)
 
-```bash
-pip install -r requirements.txt
-```
-
-Set up your PostgreSQL database using the provided schema:
+1. Clone the repository:
    ```bash
-   psql -f setup.sql
+   git clone <repository-url>
+   cd plant-tracker
    ```
 
-Configure your database connection in a `.env` file:
-```
-echo "PG_CONNECTION_STRING=<YOUR_POSTGRESQL_CONNECTION_STRING> > .env"
-```
+2. Install dependencies:
+   ```bash
+   uv sync
+   ```
 
-## Usage
+3. Set up environment variables (create `.env` file):
+   ```
+   DATABASE_URL=postgresql://username:password@localhost:5432/plant_tracker
+   ```
 
-Run the moisture reading script:
-```bash
-python db_store.py
-```
+4. Run migrations:
+   ```bash
+   uv run python manage.py migrate
+   ```
 
-The script will:
-- Initialize 3 moisture sensors
-- Display a loading spinner while sensors come online
-- Read moisture levels from all sensors
-- Store the data in the database with timestamp and device information
+5. Create a superuser:
+   ```bash
+   uv run python manage.py createsuperuser
+   ```
 
-## Data Format
+6. Start the development server:
+   ```bash
+   uv run python manage.py runserver
+   ```
 
-Moisture readings are stored as JSON in the database:
-```json
-{
-  "sensors": {
-    "m1": 0.45,
-    "m2": 0.62,
-    "m3": 0.38
-  },
-  "device": "raspberrypi-001"
-}
-```
+### Using Docker
 
-## Logging
+1. Build and run with Docker:
+   ```bash
+   docker build -t plant-tracker .
+   docker run -p 8000:8000 plant-tracker
+   ```
 
-The system logs to both console and file (`grow_hat.log`) with warnings for sensor connection issues and errors for database problems.
+## Database Configuration
+
+The application uses PostgreSQL and supports multiple connection configurations through `.pg_service.conf` and various credential files for different providers (Aiven, Neon, Supabase, etc.).
+
+## Development
+
+The project structure:
+- `plant_tracker/` - Django project settings
+- `plants/` - Main application with models, views, and forms
+- `requirements.txt` - Python dependencies (legacy)
+- `pyproject.toml` - Modern Python project configuration
+- `Dockerfile` - Container configuration
 
 ## License
 
-See LICENSE file for details.
+Licensed under the terms specified in the LICENSE file.
