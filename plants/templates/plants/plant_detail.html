@@ -55,29 +55,287 @@
         </div>
 
         <div>
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Actions</h2>
-            <div class="space-y-3">
-                <a href="{% url 'plant-list' %}" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
-                    Back to Plant List
-                </a>
-                <a href="{% url 'plant-update' plant.pk %}" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
-                    Edit This Plant
-                </a>
-                <a href="{% url 'plant-delete' plant.pk %}" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-200 text-center block">
-                    Delete This Plant
-                </a>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Health Status</h2>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Current Health</label>
+                {% if latest_health_status %}
+                    <p class="text-lg font-medium mb-1">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if latest_health_status.health_status == 'thriving' %}bg-green-100 text-green-800
+                            {% elif latest_health_status.health_status == 'healthy' %}bg-blue-100 text-blue-800
+                            {% elif latest_health_status.health_status == 'improving' %}bg-yellow-100 text-yellow-800
+                            {% elif latest_health_status.health_status == 'bad' %}bg-orange-100 text-orange-800
+                            {% elif latest_health_status.health_status == 'worsening' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ latest_health_status.get_health_status_display|title }}
+                        </span>
+                    </p>
+                    <p class="text-sm text-gray-500">{{ latest_health_status.datetime|date:"F d, Y \a\t g:i A" }}</p>
+                {% else %}
+                    <p class="text-gray-500 italic">No health status recorded</p>
+                {% endif %}
             </div>
+
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Plant Care</h3>
+            <div class="space-y-2 mb-4">
+                <button onclick="openHealthModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition duration-200">
+                    🌱 Update Health Status
+                </button>
+                <button onclick="openEventModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
+                    📝 Log Care Event
+                </button>
+            </div>
+
         </div>
     </div>
 
-    <!-- Future: Display related moisture logs, device registrations, etc. -->
+    <!-- Recent Events and Health History -->
     <div class="mt-8 pt-8 border-t border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Related Information</h2>
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p class="text-blue-800">
-                <strong>Coming Soon:</strong> Moisture logs, device registrations, and care history will be displayed here.
-            </p>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Recent Events</h3>
+                {% if recent_events %}
+                    <div class="space-y-3">
+                        {% for event in recent_events %}
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-gray-900">{{ event.get_event_type_display|title }}</span>
+                                <span class="text-sm text-gray-500">{{ event.datetime|date:"M d, Y" }}</span>
+                            </div>
+                            {% if event.comments %}
+                                <p class="text-sm text-gray-600 mt-1">{{ event.comments }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 italic">No events recorded yet</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Health History</h3>
+                {% if plant.health_checkins.all %}
+                    <div class="space-y-3">
+                        {% for health_checkin in plant.health_checkins.all|slice:":5" %}
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if health_checkin.health_status == 'thriving' %}bg-green-100 text-green-800
+                                    {% elif health_checkin.health_status == 'healthy' %}bg-blue-100 text-blue-800
+                                    {% elif health_checkin.health_status == 'improving' %}bg-yellow-100 text-yellow-800
+                                    {% elif health_checkin.health_status == 'bad' %}bg-orange-100 text-orange-800
+                                    {% elif health_checkin.health_status == 'worsening' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ health_checkin.get_health_status_display|title }}
+                                </span>
+                                <span class="text-sm text-gray-500">{{ health_checkin.datetime|date:"M d, Y" }}</span>
+                            </div>
+                            {% if health_checkin.comments %}
+                                <p class="text-sm text-gray-600 mt-1">{{ health_checkin.comments }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 italic">No health check-ins recorded yet</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Health Status Modal -->
+<div id="healthModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-4">Update Health Status</h3>
+            <div class="grid grid-cols-2 gap-2 mb-4" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "thriving"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Thriving
+                </button>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "healthy"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Healthy
+                </button>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "improving"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Improving
+                </button>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "bad"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Bad
+                </button>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "worsening"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Worsening
+                </button>
+                <button hx-post="{% url 'quick-health-update' plant.pk %}" 
+                        hx-vals='{"health_status": "dead"}'
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) { closeHealthModal(); window.location.reload(); }"
+                        class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                    Dead
+                </button>
+            </div>
+            <div class="flex justify-center mt-6">
+                <button type="button" onclick="closeHealthModal()" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Modal -->
+<div id="eventModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 text-center mb-4">Log Care Event</h3>
+            
+            <!-- Event Type Selection -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 text-left mb-2">Event Type</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="selectEventType('watering', '💧 Watering')" 
+                        class="event-type-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                        💧 Watering
+                    </button>
+                    <button type="button" onclick="selectEventType('repot', '🪴 Repot')" 
+                        class="event-type-btn bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                        🪴 Repot
+                    </button>
+                    <button type="button" onclick="selectEventType('environment change', '🌡️ Environment')" 
+                        class="event-type-btn bg-green-500 hover:bg-green-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                        🌡️ Environment
+                    </button>
+                    <button type="button" onclick="selectEventType('cuttings', '✂️ Cuttings')" 
+                        class="event-type-btn bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 text-sm rounded-md transition duration-200">
+                        ✂️ Cuttings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Event Form (hidden until event type selected) -->
+            <form id="eventForm" hx-post="{% url 'create-event' plant.pk %}" hx-swap="none" hx-on::after-request="handleEventResponse(event)" class="hidden">
+                {% csrf_token %}
+                <input type="hidden" id="eventType" name="event_type" value="">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 text-left mb-2">
+                        <span id="selectedEventType">Event</span> - Comments (optional)
+                    </label>
+                    <textarea 
+                        id="eventComments" 
+                        name="comments" 
+                        rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Optional notes about this event..."></textarea>
+                </div>
+                <div class="flex justify-center space-x-3">
+                    <button type="button" onclick="showEventSelection()" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">
+                        Back
+                    </button>
+                    <button type="submit" 
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition duration-200">
+                        Log Event
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Cancel button for event type selection -->
+            <div id="eventCancelButton" class="flex justify-center mt-6">
+                <button type="button" onclick="closeEventModal()" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Health Modal Functions
+function openHealthModal() {
+    document.getElementById('healthModal').classList.remove('hidden');
+}
+
+function closeHealthModal() {
+    document.getElementById('healthModal').classList.add('hidden');
+}
+
+// Event Modal Functions
+function openEventModal() {
+    document.getElementById('eventModal').classList.remove('hidden');
+    showEventSelection();
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventForm').classList.add('hidden');
+    document.getElementById('eventCancelButton').classList.remove('hidden');
+    // Reset event type buttons
+    document.querySelectorAll('.event-type-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400');
+    });
+}
+
+function showEventSelection() {
+    document.getElementById('eventForm').classList.add('hidden');
+    document.getElementById('eventCancelButton').classList.remove('hidden');
+}
+
+function selectEventType(eventType, displayName) {
+    document.getElementById('eventType').value = eventType;
+    document.getElementById('selectedEventType').textContent = displayName;
+    document.getElementById('eventForm').classList.remove('hidden');
+    document.getElementById('eventCancelButton').classList.add('hidden');
+    document.getElementById('eventComments').focus();
+    
+    // Visual feedback for selected button
+    document.querySelectorAll('.event-type-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400');
+    });
+    event.target.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+}
+
+function handleEventResponse(event) {
+    if (event.detail.successful) {
+        closeEventModal();
+        window.location.reload();
+    }
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const healthModal = document.getElementById('healthModal');
+    const eventModal = document.getElementById('eventModal');
+    
+    if (event.target == healthModal) {
+        closeHealthModal();
+    }
+    if (event.target == eventModal) {
+        closeEventModal();
+    }
+}
+</script>
 {% endblock %}

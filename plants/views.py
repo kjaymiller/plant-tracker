@@ -1,12 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from .models import Plants, PlantTypes
-from .forms import PlantForm
+from .models import Plants, PlantTypes, HealthCheckin, Events
+from .forms import PlantForm, HealthCheckinForm, EventForm
 
 
 def home(request):
@@ -31,6 +31,15 @@ class PlantDetailView(DetailView):
 
     def get_queryset(self):
         return Plants.objects.select_related('scientific_name').all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        plant = self.get_object()
+        context['latest_health_status'] = plant.health_checkins.first()
+        context['recent_events'] = plant.events.all()[:5]
+        context['health_form'] = HealthCheckinForm()
+        context['event_form'] = EventForm()
+        return context
 
 
 class PlantCreateView(CreateView):
@@ -126,3 +135,60 @@ def create_plant_type(request):
         })
     except Exception as e:
         return JsonResponse({'error': f'Failed to create plant type: {str(e)}'}, status=500)
+
+
+@require_POST
+def create_health_checkin(request, plant_id):
+    plant = get_object_or_404(Plants, pk=plant_id)
+    form = HealthCheckinForm(request.POST)
+    
+    if form.is_valid():
+        health_checkin = form.save(commit=False)
+        health_checkin.plant = plant
+        health_checkin.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Health check-in recorded successfully',
+            'health_status': health_checkin.get_health_status_display(),
+            'datetime': health_checkin.datetime.strftime('%B %d, %Y at %I:%M %p')
+        })
+    else:
+        return JsonResponse({'error': 'Invalid form data', 'errors': form.errors}, status=400)
+
+
+@require_POST
+def create_event(request, plant_id):
+    plant = get_object_or_404(Plants, pk=plant_id)
+    form = EventForm(request.POST)
+    
+    if form.is_valid():
+        event = form.save(commit=False)
+        event.plant = plant
+        event.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Event logged successfully',
+            'event_type': event.get_event_type_display(),
+            'datetime': event.datetime.strftime('%B %d, %Y at %I:%M %p')
+        })
+    else:
+        return JsonResponse({'error': 'Invalid form data', 'errors': form.errors}, status=400)
+
+
+@require_POST
+def quick_health_update(request, plant_id):
+    plant = get_object_or_404(Plants, pk=plant_id)
+    health_status = request.POST.get('health_status')
+    
+    if health_status and health_status in [choice[0] for choice in HealthCheckin.HealthStatus.choices]:
+        health_checkin = HealthCheckin.objects.create(
+            plant=plant,
+            health_status=health_status
+        )
+        return JsonResponse({
+            'success': True,
+            'message': 'Health status updated successfully',
+            'health_status': health_checkin.get_health_status_display()
+        })
+    else:
+        return JsonResponse({'error': 'Invalid health status'}, status=400)
