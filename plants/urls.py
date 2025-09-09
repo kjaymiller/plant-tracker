@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:plant_id>/health-checkin/', views.create_health_checkin, name='create-health-checkin'),
     path('<int:plant_id>/event/', views.create_event, name='create-event'),
     path('<int:plant_id>/quick-health/', views.quick_health_update, name='quick-health-update'),
+    path('<int:plant_id>/upload-image/', views.upload_plant_image, name='upload-plant-image'),
 ]

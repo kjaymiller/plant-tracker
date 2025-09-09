@@ -196,3 +196,5 @@ cython_debug/
 *pg_service.conf
 *pgpass
 .python-version
+images
+media

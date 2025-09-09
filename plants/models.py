@@ -50,7 +50,7 @@ class Events(models.Model):
     class Meta:
         managed = False
         db_table = "events"
-        ordering = ['-datetime']
+        ordering = ["-datetime"]
 
 
 class HealthCheckin(models.Model):
@@ -73,5 +73,19 @@ class HealthCheckin(models.Model):
     class Meta:
         managed = False
         db_table = "health_checkin"
-        ordering = ['-datetime']
+        ordering = ["-datetime"]
         verbose_name_plural = "Health Check-ins"
+
+
+class Images(models.Model):
+    plant = models.ForeignKey(
+        "Plants", models.CASCADE, related_name="images", db_column="plant"
+    )
+    image_path = models.CharField(max_length=255, db_column="filename")
+    caption = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True, db_column="datetime")
+
+    class Meta:
+        managed = False
+        db_table = "images"
+        ordering = ["-uploaded_at"]

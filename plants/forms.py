@@ -1,5 +1,5 @@
 from django import forms
-from .models import Plants, PlantTypes, HealthCheckin, Events
+from .models import Plants, PlantTypes, HealthCheckin, Events, Images
 
 
 class PlantForm(forms.ModelForm):
@@ -58,5 +58,25 @@ class EventForm(forms.ModelForm):
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500',
                 'rows': 3,
                 'placeholder': 'Optional notes about this event...'
+            }),
+        }
+
+
+class ImageForm(forms.ModelForm):
+    image_file = forms.ImageField(
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500',
+            'accept': 'image/*'
+        })
+    )
+    
+    class Meta:
+        model = Images
+        fields = ['caption']
+        widgets = {
+            'caption': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500',
+                'rows': 3,
+                'placeholder': 'Optional caption for the image...'
             }),
         }

@@ -5,8 +5,13 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from .models import Plants, PlantTypes, HealthCheckin, Events
-from .forms import PlantForm, HealthCheckinForm, EventForm
+from django.conf import settings
+from pathlib import Path
+import shutil
+import uuid
+from datetime import datetime
+from .models import Plants, PlantTypes, HealthCheckin, Events, Images
+from .forms import PlantForm, HealthCheckinForm, EventForm, ImageForm
 
 
 def home(request):
@@ -37,8 +42,10 @@ class PlantDetailView(DetailView):
         plant = self.get_object()
         context['latest_health_status'] = plant.health_checkins.first()
         context['recent_events'] = plant.events.all()[:5]
+        context['images'] = plant.images.all()[:10]
         context['health_form'] = HealthCheckinForm()
         context['event_form'] = EventForm()
+        context['image_form'] = ImageForm()
         return context
 
 
@@ -192,3 +199,43 @@ def quick_health_update(request, plant_id):
         })
     else:
         return JsonResponse({'error': 'Invalid health status'}, status=400)
+
+
+@require_POST
+def upload_plant_image(request, plant_id):
+    plant = get_object_or_404(Plants, pk=plant_id)
+    form = ImageForm(request.POST, request.FILES)
+    
+    if form.is_valid() and 'image_file' in request.FILES:
+        image_file = request.FILES['image_file']
+        
+        # Create media directory using pathlib
+        media_root = Path(settings.MEDIA_ROOT)
+        plant_dir = media_root / 'plants' / str(plant_id)
+        plant_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save the file with a unique name using pathlib
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_extension = Path(image_file.name).suffix
+        filename = f"{timestamp}_{uuid.uuid4().hex[:8]}{file_extension}"
+        file_path = plant_dir / filename
+        
+        # Save the file using shutil
+        with file_path.open('wb') as destination:
+            shutil.copyfileobj(image_file, destination)
+        
+        # Create database record with relative path
+        relative_path = Path('plants') / str(plant_id) / filename
+        image = form.save(commit=False)
+        image.plant = plant
+        image.image_path = str(relative_path)
+        image.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Image uploaded successfully',
+            'image_url': f"{settings.MEDIA_URL}{relative_path}",
+            'image_id': image.id
+        })
+    else:
+        return JsonResponse({'error': 'Invalid form data or no image file', 'errors': form.errors}, status=400)
