@@ -77,7 +77,17 @@ class PlantListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Plants.objects.select_related('scientific_name').all()
+        return Plants.objects.select_related('scientific_name').prefetch_related('images', 'health_checkins', 'events').all()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add latest image, health status, and recent events for each plant
+        plants = context.get('plants', [])
+        for plant in plants:
+            plant.latest_image = plant.images.first()
+            plant.latest_health = plant.health_checkins.first()
+            plant.recent_events = list(plant.events.all()[:3])  # Get last 3 events
+        return context
 
 
 class PlantDetailView(DetailView):
@@ -290,3 +300,59 @@ def upload_plant_image(request, plant_id):
         })
     else:
         return JsonResponse({'error': 'Invalid form data or no image file', 'errors': form.errors}, status=400)
+
+
+class ImageUpdateView(UpdateView):
+    model = Images
+    form_class = ImageForm
+    template_name = 'plants/image_form.html'
+    context_object_name = 'image'
+
+    def get_success_url(self):
+        return reverse_lazy('plant-detail', kwargs={'pk': self.object.plant.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Image'
+        context['plant'] = self.object.plant
+        return context
+
+
+class ImageDeleteView(DeleteView):
+    model = Images
+    template_name = 'plants/image_confirm_delete.html'
+    context_object_name = 'image'
+
+    def get_success_url(self):
+        return reverse_lazy('plant-detail', kwargs={'pk': self.object.plant.pk})
+
+    def delete(self, request, *args, **kwargs):
+        image = self.get_object()
+        
+        # Delete the physical file
+        media_root = Path(settings.MEDIA_ROOT)
+        file_path = media_root / image.image_path
+        if file_path.exists():
+            file_path.unlink()
+        
+        return super().delete(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['plant'] = self.object.plant
+        return context
+
+
+@require_POST
+def update_image_caption(request, image_id):
+    image = get_object_or_404(Images, pk=image_id)
+    caption = request.POST.get('caption', '').strip()
+    
+    image.caption = caption
+    image.save()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Caption updated successfully',
+        'caption': image.caption
+    })

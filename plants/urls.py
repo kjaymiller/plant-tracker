@@ -13,4 +13,7 @@ urlpatterns = [
     path('<int:plant_id>/event/', views.create_event, name='create-event'),
     path('<int:plant_id>/quick-health/', views.quick_health_update, name='quick-health-update'),
     path('<int:plant_id>/upload-image/', views.upload_plant_image, name='upload-plant-image'),
+    path('image/<int:pk>/edit/', views.ImageUpdateView.as_view(), name='image-update'),
+    path('image/<int:pk>/delete/', views.ImageDeleteView.as_view(), name='image-delete'),
+    path('image/<int:image_id>/update-caption/', views.update_image_caption, name='update-image-caption'),
 ]

@@ -13,25 +13,142 @@
 {% if plants %}
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {% for plant in plants %}
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ plant.name|default:"Unnamed Plant" }}</h3>
-            {% if plant.scientific_name %}
-                <p class="text-gray-600 italic mb-4">{{ plant.scientific_name.scientific_name }}</p>
-            {% else %}
-                <p class="text-gray-500 mb-4">No scientific name</p>
-            {% endif %}
-            <div class="flex space-x-2">
-                <a href="{% url 'plant-detail' plant.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition duration-200">
-                    View
+            <div class="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full">
+                <a href="{% url 'plant-detail' plant.pk %}" class="block flex-grow">
+                    {% if plant.latest_image %}
+                        <div class="h-48 overflow-hidden">
+                            <img src="/media/{{ plant.latest_image.image_path }}" alt="{{ plant.name|default:'Plant image' }}" class="w-full h-full object-cover">
+                        </div>
+                    {% endif %}
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ plant.name|default:"Unnamed Plant" }} - 
+                        {% if plant.scientific_name %}
+                            <em class="text-gray-600 italic mb-4">{{ plant.scientific_name.scientific_name }}</em>
+                        {% else %}
+                            <p class="text-gray-500 mb-4">Scientific name unknown</p>
+                        {% endif %}
+                        </h3>
+                    </div>
                 </a>
-                <a href="{% url 'plant-update' plant.pk %}" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-sm transition duration-200">
-                    Edit
-                </a>
-                <a href="{% url 'plant-delete' plant.pk %}" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition duration-200">
-                    Delete
-                </a>
+                
+                <!-- Quick Actions Section -->
+                <div class="px-6 pb-4 flex-shrink-0">
+                    <div class="bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg p-3 mb-3">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            Health Status
+                            {% if plant.latest_health %}
+                                <span class="ml-2 text-xs 
+                                    {% if plant.latest_health.health_status == 'thriving' %}text-green-600
+                                    {% elif plant.latest_health.health_status == 'healthy' %}text-blue-600
+                                    {% elif plant.latest_health.health_status == 'improving' %}text-yellow-600
+                                    {% elif plant.latest_health.health_status == 'bad' %}text-orange-600
+                                    {% elif plant.latest_health.health_status == 'worsening' %}text-red-600
+                                    {% elif plant.latest_health.health_status == 'dead' %}text-gray-600
+                                    {% else %}text-gray-500{% endif %}">
+                                    ({{ plant.latest_health.get_health_status_display|title }})
+                                </span>
+                            {% else %}
+                                <span class="ml-2 text-xs text-gray-400">(No status)</span>
+                            {% endif %}
+                        </h4>
+                        <div class="flex space-x-3">
+                            <button onclick="quickHealthUpdate({{ plant.pk }}, 'thriving')" 
+                                    class="{% if plant.latest_health.health_status == 'thriving' %}text-green-700 bg-green-50{% else %}text-green-600 hover:text-green-700{% endif %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Mark as Thriving"
+                                    aria-label="Mark plant as thriving">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 11l3-3 3 3m-3-3v8M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                            <button onclick="quickHealthUpdate({{ plant.pk }}, 'healthy')" 
+                                    class="{% if plant.latest_health.health_status == 'healthy' %}text-blue-700 bg-blue-50{% else %}text-blue-600 hover:text-blue-700{% endif %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Mark as Healthy"
+                                    aria-label="Mark plant as healthy">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </button>
+                            <button onclick="quickHealthUpdate({{ plant.pk }}, 'bad')" 
+                                    class="{% if plant.latest_health.health_status == 'bad' %}text-orange-700 bg-orange-50{% else %}text-orange-600 hover:text-orange-700{% endif %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Mark as Not Doing Well"
+                                    aria-label="Mark plant as not doing well">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 13l3 3 3-3m-3 3V8M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg p-3 mb-3">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            Recent Events
+                            {% if plant.recent_events %}
+                                <span class="ml-2 text-xs text-gray-500">
+                                    ({{ plant.recent_events|length }} recent)
+                                </span>
+                            {% else %}
+                                <span class="ml-2 text-xs text-gray-400">(No events)</span>
+                            {% endif %}
+                        </h4>
+                        <div class="flex space-x-3">
+                            {% with recent_event_types=plant.recent_events|dictsort:"event_type" %}
+                            <button onclick="quickEventLog({{ plant.pk }}, 'watering')" 
+                                    class="{% for event in plant.recent_events %}{% if event.event_type == 'watering' %}text-cyan-700 bg-cyan-50{% endif %}{% empty %}text-cyan-600 hover:text-cyan-700{% endfor %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Log Watering{% for event in plant.recent_events %}{% if event.event_type == 'watering' %} (Last: {{ event.datetime|date:'M d' }}){% endif %}{% endfor %}"
+                                    aria-label="Log watering event">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </button>
+                            <button onclick="quickEventLog({{ plant.pk }}, 'repot')" 
+                                    class="{% for event in plant.recent_events %}{% if event.event_type == 'repot' %}text-amber-700 bg-amber-50{% endif %}{% empty %}text-amber-600 hover:text-amber-700{% endfor %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Log Repotting{% for event in plant.recent_events %}{% if event.event_type == 'repot' %} (Last: {{ event.datetime|date:'M d' }}){% endif %}{% endfor %}"
+                                    aria-label="Log repotting event">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </button>
+                            <button onclick="quickEventLog({{ plant.pk }}, 'cuttings')" 
+                                    class="{% for event in plant.recent_events %}{% if event.event_type == 'cuttings' %}text-purple-700 bg-purple-50{% endif %}{% empty %}text-purple-600 hover:text-purple-700{% endfor %} p-1 transition-all duration-200 transform hover:scale-110"
+                                    title="Log Cuttings{% for event in plant.recent_events %}{% if event.event_type == 'cuttings' %} (Last: {{ event.datetime|date:'M d' }}){% endif %}{% endfor %}"
+                                    aria-label="Log cuttings event">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V17M9 10v4a4 4 0 008 0v-2M9 10V9a4 4 0 118 0v.01M9 10H7m2 0h2m-2 0v.01" />
+                                </svg>
+                            </button>
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Actions - Pinned to Bottom -->
+                <div class="px-6 pb-6 mt-auto flex-shrink-0 border-t border-white/20 pt-4">
+                    <div class="flex space-x-3 justify-center">
+                        <a href="{% url 'plant-detail' plant.pk %}" 
+                           class="text-blue-600 hover:text-blue-700 p-2 text-sm font-light transition-all duration-200 transform hover:scale-110"
+                           title="View Details"
+                           aria-label="View plant details">
+                            View
+                        </a>
+                        <a href="{% url 'plant-update' plant.pk %}" 
+                           class="text-amber-600 hover:text-amber-700 p-2 transition-all duration-200 transform hover:scale-110"
+                           title="Edit Plant"
+                           aria-label="Edit plant information">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </a>
+                        <a href="{% url 'plant-delete' plant.pk %}" 
+                           class="text-red-600 hover:text-red-700 p-2 transition-all duration-200 transform hover:scale-110"
+                           title="Delete Plant"
+                           aria-label="Delete plant">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
         {% endfor %}
     </div>
 
@@ -68,4 +185,115 @@
         </a>
     </div>
 {% endif %}
+
+<script>
+function quickHealthUpdate(plantId, healthStatus) {
+    // Prevent the overlay from closing immediately
+    if (event) event.stopPropagation();
+    
+    console.log('Updating health for plant:', plantId, 'to:', healthStatus);
+    
+    fetch(`/plants/${plantId}/quick-health/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `health_status=${healthStatus}`
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // Show success feedback and reload page to show updated status
+            showNotification(`Health updated to ${data.health_status}`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification('Failed to update health status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to update health status', 'error');
+    });
+}
+
+function quickEventLog(plantId, eventType) {
+    // Prevent the overlay from closing immediately
+    if (event) event.stopPropagation();
+    
+    console.log('Logging event for plant:', plantId, 'type:', eventType);
+    
+    fetch(`/plants/${plantId}/event/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `event_type=${eventType}&comments=Quick log from plant list`
+    })
+    .then(response => {
+        console.log('Event response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Event response data:', data);
+        if (data.success) {
+            // Show success feedback and reload page to show updated events
+            showNotification(`${data.event_type} logged successfully`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification('Failed to log event', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to log event', 'error');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    
+    // Fallback to meta tag
+    if (!cookieValue && name === 'csrftoken') {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            cookieValue = metaTag.getAttribute('content');
+        }
+    }
+    
+    return cookieValue;
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white`;
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
 {% endblock %}
