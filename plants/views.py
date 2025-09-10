@@ -356,3 +356,57 @@ def update_image_caption(request, image_id):
         'message': 'Caption updated successfully',
         'caption': image.caption
     })
+
+
+@require_POST
+def delete_health_checkin(request, checkin_id):
+    health_checkin = get_object_or_404(HealthCheckin, pk=checkin_id)
+    plant_id = health_checkin.plant.pk
+    
+    health_checkin.delete()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Health check-in deleted successfully'
+    })
+
+
+@require_POST
+def delete_event(request, event_id):
+    event = get_object_or_404(Events, pk=event_id)
+    plant_id = event.plant.pk
+    
+    event.delete()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Event deleted successfully'
+    })
+
+
+class HealthCheckinDeleteView(DeleteView):
+    model = HealthCheckin
+    template_name = 'plants/health_checkin_confirm_delete.html'
+    context_object_name = 'health_checkin'
+
+    def get_success_url(self):
+        return reverse_lazy('plant-detail', kwargs={'pk': self.object.plant.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['plant'] = self.object.plant
+        return context
+
+
+class EventDeleteView(DeleteView):
+    model = Events
+    template_name = 'plants/event_confirm_delete.html'
+    context_object_name = 'event'
+
+    def get_success_url(self):
+        return reverse_lazy('plant-detail', kwargs={'pk': self.object.plant.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['plant'] = self.object.plant
+        return context
