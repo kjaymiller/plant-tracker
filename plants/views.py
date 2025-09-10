@@ -16,7 +16,58 @@ from .forms import PlantForm, HealthCheckinForm, EventForm, ImageForm
 
 def home(request):
     plant_count = Plants.objects.count()
-    return render(request, 'plants/home.html', {'plant_count': plant_count})
+    
+    # Get recent activities
+    recent_images = Images.objects.select_related('plant').all()[:10]
+    recent_health_checks = HealthCheckin.objects.select_related('plant').all()[:10]
+    recent_events = Events.objects.select_related('plant').all()[:10]
+    
+    # Combine all activities into a single list with type info
+    activities = []
+    
+    for image in recent_images:
+        activities.append({
+            'type': 'image',
+            'datetime': image.uploaded_at,
+            'plant': image.plant,
+            'data': image,
+            'icon': 'camera',
+            'title': f'Image added for {image.plant.name}',
+            'description': image.caption or 'New image uploaded'
+        })
+    
+    for health_check in recent_health_checks:
+        activities.append({
+            'type': 'health_check',
+            'datetime': health_check.datetime,
+            'plant': health_check.plant,
+            'data': health_check,
+            'icon': 'heart',
+            'title': f'Health check for {health_check.plant.name}',
+            'description': f'Status: {health_check.get_health_status_display()}'
+        })
+    
+    for event in recent_events:
+        activities.append({
+            'type': 'event',
+            'datetime': event.datetime,
+            'plant': event.plant,
+            'data': event,
+            'icon': 'calendar',
+            'title': f'{event.get_event_type_display().title()} for {event.plant.name}',
+            'description': event.comments or f'{event.get_event_type_display().title()} event'
+        })
+    
+    # Sort activities by datetime (most recent first)
+    activities.sort(key=lambda x: x['datetime'], reverse=True)
+    
+    # Take only the most recent 15 activities
+    recent_activities = activities[:15]
+    
+    return render(request, 'plants/home.html', {
+        'plant_count': plant_count,
+        'recent_activities': recent_activities
+    })
 
 
 class PlantListView(ListView):

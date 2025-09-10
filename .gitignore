@@ -198,3 +198,4 @@ cython_debug/
 .python-version
 images
 media
+CLAUDE.md

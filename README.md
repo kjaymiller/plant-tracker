@@ -5,26 +5,33 @@ A Django web application for tracking plants, their moisture levels, and associa
 ## Features
 
 - **Plant Management**: Track individual plants with names, scientific names, and notes
-- **Device Integration**: Register and manage IoT devices for monitoring plants
-- **Moisture Monitoring**: Log and track moisture data from connected devices
 - **Plant Types**: Manage plant species with scientific classifications
-- **Device Registration**: Associate devices with specific plants for monitoring
-
-## Models
-
-- **Plants**: Store plant information including names, scientific names, and notes
-- **Devices**: Manage IoT devices with hostname and location tracking
-- **MoistureLogs**: Record moisture sensor data with timestamps
-- **PlantTypes**: Catalog plant species with scientific names
-- **PlantDeviceRegistration**: Link plants to monitoring devices
 
 ## Requirements
 
-- Python ≥ 3.13
-- PostgreSQL database
-- Django ≥ 5.2.4
+- Python >= 3.13
+- PostgreSQL database >= 17.0
+- Django >= 5.2.4
 
 ## Setup
+
+### Database Schema Restoration (First Time Setup)
+
+If you're setting up the project for the first time and have the schema backup, restore it before running migrations:
+
+1. Start PostgreSQL (either locally or using the provided Docker setup):
+   ```bash
+   # Using the backup Docker container
+   docker build -f Dockerfile.pg18 -t plant-tracker-pg18 .
+   docker run --name plant-tracker-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d plant-tracker-pg18
+   ```
+
+2. Restore the schema from backup:
+   ```bash
+   # Wait a moment for PostgreSQL to start, then restore
+   psql -h localhost -U postgres -d postgres -f schema_backup.sql
+   ```
+
 
 ### Using UV (Recommended)
 
@@ -67,19 +74,14 @@ A Django web application for tracking plants, their moisture levels, and associa
    docker run -p 8000:8000 plant-tracker
    ```
 
-## Database Configuration
-
-The application uses PostgreSQL and supports multiple connection configurations through `.pg_service.conf` and various credential files for different providers (Aiven, Neon, Supabase, etc.).
-
 ## Development
 
 The project structure:
 - `plant_tracker/` - Django project settings
 - `plants/` - Main application with models, views, and forms
-- `requirements.txt` - Python dependencies (legacy)
 - `pyproject.toml` - Modern Python project configuration
 - `Dockerfile` - Container configuration
 
 ## License
 
-Licensed under the terms specified in the LICENSE file.
+Licensed under the terms specified in the [LICENSE](.LICENSE) file.

@@ -3,22 +3,90 @@
 {% block title %}Home - Plant Tracker{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h1 class="text-4xl font-bold text-gray-900 mb-8">Welcome to Plant Tracker</h1>
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center">Plant Tracker</h1>
     
-    <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto mb-8">
-        <div class="text-3xl font-bold text-green-600 mb-2">{{ plant_count }}</div>
-        <div class="text-gray-600">Plant{{ plant_count|pluralize }} tracked</div>
+    <!-- Stats and Quick Actions -->
+    <div class="flex justify-between items-center mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ plant_count }}</div>
+            <div class="text-gray-600">Plant{{ plant_count|pluralize }} tracked</div>
+        </div>
+        
+        <div class="space-x-4">
+            <a href="{% url 'plant-list' %}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                View All Plants
+            </a>
+            <a href="{% url 'plant-create' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                Add New Plant
+            </a>
+        </div>
     </div>
     
-    <div class="space-y-4">
-        <a href="{% url 'plant-list' %}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
-            View All Plants
-        </a>
-        <br>
-        <a href="{% url 'plant-create' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg">
-            Add New Plant
-        </a>
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Recent Activity</h2>
+        </div>
+        
+        {% if recent_activities %}
+            <div class="divide-y divide-gray-200">
+                {% for activity in recent_activities %}
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-start space-x-3">
+                            <!-- Activity Icon -->
+                            <div class="flex-shrink-0">
+                                {% if activity.icon == 'camera' %}
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </div>
+                                {% elif activity.icon == 'heart' %}
+                                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                    </div>
+                                {% elif activity.icon == 'calendar' %}
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Activity Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
+                                        <p class="text-sm text-gray-500">{{ activity.description }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-gray-500">{{ activity.datetime|date:"M j, Y" }}</p>
+                                        <p class="text-xs text-gray-500">{{ activity.datetime|time:"g:i A" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Plant Link -->
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'plant-detail' activity.plant.id %}" class="text-sm text-green-600 hover:text-green-800">
+                                    View Plant →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="px-6 py-8 text-center text-gray-500">
+                <p>No recent activity. Start by adding some plants and tracking their health!</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
