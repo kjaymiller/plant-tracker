@@ -15,29 +15,11 @@ A Django web application for tracking plants, their moisture levels, and associa
 
 ## Setup
 
-### Database Schema Restoration (First Time Setup)
-
-If you're setting up the project for the first time and have the schema backup, restore it before running migrations:
-
-1. Start PostgreSQL (either locally or using the provided Docker setup):
-   ```bash
-   # Using the backup Docker container
-   docker build -f Dockerfile.pg18 -t plant-tracker-pg18 .
-   docker run --name plant-tracker-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d plant-tracker-pg18
-   ```
-
-2. Restore the schema from backup:
-   ```bash
-   # Wait a moment for PostgreSQL to start, then restore
-   psql -h localhost -U postgres -d postgres -f schema_backup.sql
-   ```
-
-
 ### Using UV (Recommended)
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   gh repo clone kjaymiller/plant-tracker
    cd plant-tracker
    ```
 
@@ -48,7 +30,17 @@ If you're setting up the project for the first time and have the schema backup, 
 
 3. Set up environment variables (create `.env` file):
    ```
-   DATABASE_URL=postgresql://username:password@localhost:5432/plant_tracker
+   DATABASE_CONNECTION_STRING=postgresql://username:password@localhost:5432/plant_tracker
+   ```
+
+### Database Schema Restoration (First Time Setup)
+
+If you're setting up the project for the first time you can load the schema backup. 
+**DO THIS BEFORE RUNNING MIGRATIONS:**
+
+   ```bash
+   # Wait a moment for PostgreSQL to start, then restore
+   psql $DATABASE_CONNECTION_STRING -f schema_backup.sql
    ```
 
 4. Run migrations:
