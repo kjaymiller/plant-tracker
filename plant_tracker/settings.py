@@ -75,7 +75,7 @@ WSGI_APPLICATION = "plant_tracker.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-DATABASE_URL = os.environ.get("AIVEN_PG_CONNECTION_STRING")
+DATABASE_URL = os.environ.get("DATABASE_CONNECTION_STRING")
 DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 
 # Password validation

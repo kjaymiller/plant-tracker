@@ -63,8 +63,7 @@ If you're setting up the project for the first time you can load the schema back
 1. Build and run with Docker:
    ```bash
    docker build -t plant-tracker .
-   docker run -p 8000:8000 plant-tracker
-   ```
+   docker run -p 8000:8000 plant-tracker -e SECRET_KEY=<CREATE_A_RANDOM_KEY> -e DATABASE_CONNECTION_STRING=$DATABASE_CONNECTION_STRING
 
 ## Development
 
